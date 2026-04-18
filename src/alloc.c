@@ -90,6 +90,8 @@ void *myMalloc(size_t size) {
 	block_t *block;
 	size_t block_size;
 
+	if(size == 0) return NULL;
+
 	if(heap_start == NULL) {
 		heap_start = (void *)sbrk(0);
 	}
@@ -117,9 +119,9 @@ void *myMalloc(size_t size) {
 void myFree(void *ptr) {
 	block_t *block;
 
+	if (ptr == NULL) return;
 	/* ptr points to the data, not the header, so we need to step
 	 * back to the header */
-
 	block = (block_t *)((char *)ptr - sizeof(block_t));
 	block->free = 1;
 	if(free_list != NULL) {
