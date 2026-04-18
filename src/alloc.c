@@ -1,6 +1,7 @@
 #include "alloc.h"
 #include <stddef.h>
 #include <unistd.h>
+#include <string.h>
 
 /* See examples of what's happening in notes.md */
 #define ALIGN(size) (((size) + 7) & ~7)
@@ -89,8 +90,10 @@ void *myMalloc(size_t size) {
 	block_t *block;
 	size_t block_size;
 
-	heap_start = (void *)sbrk(0);
-	/*                         | Boundary tag size | */
+	if(heap_start == NULL) {
+		heap_start = (void *)sbrk(0);
+	}
+	/*                        | Boundary tag size | */
 	block_size = ALIGN(size) + sizeof(size_t);
 	block = findFreeBlock(block_size);
 	if(block == NULL) {
@@ -126,4 +129,31 @@ void myFree(void *ptr) {
 	block->prev = NULL;
 	free_list = block;
 	coalesce(block);
+}
+
+void *myRealloc(void *ptr, size_t size) {
+	block_t *block;
+	block_t *new_block;
+
+	if(ptr == NULL) {
+		return myMalloc(size);
+	}
+
+	if(size == 0) {
+		myFree(ptr);
+		return NULL;
+	}
+	block = (block_t *)((char *)ptr - sizeof(block_t));
+
+	if(block->size - sizeof(size_t) >= ALIGN(size)) {
+		return ptr;
+	}
+
+	new_block = myMalloc(size);
+	if (new_block == NULL) return NULL;
+	
+	/*									| boundary tag size | */
+	memcpy(new_block, ptr, block->size - sizeof(size_t));
+	myFree(ptr);
+	return new_block;
 }

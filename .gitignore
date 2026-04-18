@@ -5,4 +5,5 @@ bin/
 notes.md
 log.txt
 resources.md
+.clangd
 .clang-format
