@@ -86,6 +86,10 @@ static void coalesce(block_t *block) {
 	}
 }
 
+size_t myHeapSize(void) {
+	return (char *)sbrk(0) - (char *)heap_start;
+}
+
 void *myMalloc(size_t size) {
 	block_t *block;
 	size_t block_size;
