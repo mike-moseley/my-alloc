@@ -21,6 +21,14 @@ AllocError arenaCreate(size_t capacity, arena_t **out) {
 	return ALLOC_OK;
 }
 
+/*
+ * We are working on pointers, so we need a pointer(void **out)
+ * to the pointer(void *out) we want to work with
+ * otherwise we would be working on a copy of the pointer and not the pointer
+ * itself...
+ * **out (* operator) is the data, *out is the pointer to the data(what we are manipulating)
+ * and out is the pointer to the pointer we are working with.
+*/
 AllocError arenaAlloc(arena_t *arena, size_t size, void **out) {
 	if(arena == NULL) return ALLOC_ERROR_NULL;
 	if(out == NULL) return ALLOC_ERROR_NULL;
@@ -31,4 +39,15 @@ AllocError arenaAlloc(arena_t *arena, size_t size, void **out) {
 	arena->offset += ALIGN(size);
 	
 	return ALLOC_OK;
+}
+
+void arenaReset(arena_t *arena) {
+	if(arena == NULL) return;
+	arena->offset = 0;
+}
+
+void arenaDestroy(arena_t *arena) {
+	if(arena==NULL) return;
+	/*            | Header len  | + |  buf len     | */
+	munmap(arena, sizeof(arena_t) + arena->capacity);
 }
