@@ -1,6 +1,7 @@
 #include "alloc_error.h"
 #include "sys/mman.h"
 #include "arena.h"
+#include "alloc_common.h"
 
 AllocError arenaCreate(size_t capacity, arena_t **out) {
 	arena_t *arena;
@@ -17,5 +18,10 @@ AllocError arenaCreate(size_t capacity, arena_t **out) {
 	arena->capacity = capacity;
 	*out = arena;
 
+	return ALLOC_OK;
+}
+
+AllocError arenaAlloc(arena_t *arena, size_t size, void **out) {
+	
 	return ALLOC_OK;
 }

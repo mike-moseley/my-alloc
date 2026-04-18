@@ -2,9 +2,7 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <string.h>
-
-/* See examples of what's happening in notes.md */
-#define ALIGN(size) (((size) + 7) & ~7)
+#include "alloc_common.h"
 
 typedef struct block_t {
 	size_t size;
