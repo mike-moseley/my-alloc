@@ -22,6 +22,13 @@ AllocError arenaCreate(size_t capacity, arena_t **out) {
 }
 
 AllocError arenaAlloc(arena_t *arena, size_t size, void **out) {
+	if(arena == NULL) return ALLOC_ERROR_NULL;
+	if(out == NULL) return ALLOC_ERROR_NULL;
+	if(size == 0) return ALLOC_ERROR_SIZE;
+	if(ALIGN(size) > arena->capacity - arena->offset) return ALLOC_ERROR_SIZE;
+
+	*out = arena->buf + arena->offset;
+	arena->offset += ALIGN(size);
 	
 	return ALLOC_OK;
 }
