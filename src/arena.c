@@ -9,6 +9,7 @@ AllocError arenaCreate(size_t capacity, arena_t **out) {
 	if(out == NULL) return ALLOC_ERROR_NULL;
 	if(capacity == 0) return ALLOC_ERROR_SIZE;
 
+	/*                            | Header len  | + | buf len| */
 	arena = (arena_t *)mmap(NULL, sizeof(arena_t) + capacity, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	if(arena == MAP_FAILED) return ALLOC_ERROR_OOM;
 
