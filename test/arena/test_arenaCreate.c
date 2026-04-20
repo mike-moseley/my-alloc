@@ -1,6 +1,5 @@
 #include "unity.h"
 #include "arena.h"
-#include "alloc_error.h"
 
 void setUp(void) {}
 void tearDown(void) {}

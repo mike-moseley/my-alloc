@@ -44,6 +44,7 @@ add_custom_target(tests DEPENDS
 	test_alloc_myFree
 	test_alloc_myRealloc
 	test_arena_arenaCreate
+	test_arena_arenaAlloc
 )
 
 add_unity_test(test_example test/test_example.c)
@@ -51,3 +52,4 @@ add_unity_test(test_alloc_myAlloc test/alloc/test_myAlloc.c)
 add_unity_test(test_alloc_myFree test/alloc/test_myFree.c)
 add_unity_test(test_alloc_myRealloc test/alloc/test_myRealloc.c)
 add_unity_test(test_arena_arenaCreate test/arena/test_arenaCreate.c)
+add_unity_test(test_arena_arenaAlloc test/arena/test_arenaAlloc.c)
