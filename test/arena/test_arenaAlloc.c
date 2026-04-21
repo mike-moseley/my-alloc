@@ -6,7 +6,7 @@
 void setUp(void) {}
 void tearDown(void) {}
 
-void test_alloc_ok(void) {
+void test_reset_same_ptr(void) {
 	arena_t *arena;
 	AllocError err;
 	void *ptr;
@@ -150,7 +150,7 @@ void test_alloc_not_corrupt_neighbors(void) {
 int main(void)
 {
 	UNITY_BEGIN();
-	RUN_TEST(test_alloc_ok);
+	RUN_TEST(test_reset_same_ptr);
 	RUN_TEST(test_arena_null);
 	RUN_TEST(test_out_null);
 	RUN_TEST(test_size_zero);
