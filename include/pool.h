@@ -6,12 +6,12 @@
 
 typedef struct {
 	char *buf;
-	size_t capacity;
+	size_t count;
 	size_t chunk_size;
 	void *free_list;
 } pool_t;
 
-AllocError poolCreate(size_t capacity, size_t chunk_size, pool_t **out);
+AllocError poolCreate(size_t count, size_t chunk_size, pool_t **out);
 AllocError poolAlloc(pool_t *pool, void **out);
 void poolFree(pool_t *pool, void *chunk);
 void poolDestroy(pool_t *pool);
