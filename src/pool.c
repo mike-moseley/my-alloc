@@ -53,3 +53,28 @@ AllocError poolCreate(size_t count, size_t chunk_size, pool_t **out) {
 	
 	return ALLOC_OK;
 }
+
+AllocError poolAlloc(pool_t *pool, void **out) {
+	chunk_t *head;
+	if(pool == NULL) return ALLOC_ERROR_NULL;
+	if(out == NULL) return ALLOC_ERROR_NULL;
+	if(pool->free_list == NULL) return ALLOC_ERROR_OOM;
+
+	head = (chunk_t *)pool->free_list;
+	pool->free_list = head->next;
+	*out = head;
+	return ALLOC_OK;
+}
+
+void poolFree(pool_t *pool, void *chunk) {
+	if(pool == NULL) return ;
+	if(chunk == NULL) return ;
+
+	((chunk_t *)chunk)->next = (chunk_t *)pool->free_list;
+	pool->free_list = chunk;
+}
+
+void poolDestroy(pool_t *pool) {
+	if(pool == NULL) return;
+	munmap(pool, sizeof(pool_t) + pool->chunk_size * pool->count);
+}
