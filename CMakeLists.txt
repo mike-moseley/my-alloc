@@ -51,12 +51,15 @@ add_custom_target(tests DEPENDS
 	test_pool_poolAlloc
 	test_pool_poolFree
 	test_pool_poolDestroy
+	test_mmap_mmapAlloc
+	test_mmap_mmapFree
+	test_mmap_mmapRealloc
 )
 
 add_unity_test(test_example test/test_example.c)
-add_unity_test(test_sbrk_sbrkAlloc test/alloc/test_sbrkAlloc.c)
-add_unity_test(test_sbrk_sbrkFree test/alloc/test_sbrkFree.c)
-add_unity_test(test_sbrk_sbrkRealloc test/alloc/test_sbrkRealloc.c)
+add_unity_test(test_sbrk_sbrkAlloc test/sbrk/test_sbrkAlloc.c)
+add_unity_test(test_sbrk_sbrkFree test/sbrk/test_sbrkFree.c)
+add_unity_test(test_sbrk_sbrkRealloc test/sbrk/test_sbrkRealloc.c)
 add_unity_test(test_arena_arenaCreate test/arena/test_arenaCreate.c)
 add_unity_test(test_arena_arenaAlloc test/arena/test_arenaAlloc.c)
 add_unity_test(test_arena_arenaReset test/arena/test_arenaReset.c)
@@ -65,3 +68,6 @@ add_unity_test(test_pool_poolCreate test/pool/test_poolCreate.c)
 add_unity_test(test_pool_poolAlloc test/pool/test_poolAlloc.c)
 add_unity_test(test_pool_poolFree test/pool/test_poolFree.c)
 add_unity_test(test_pool_poolDestroy test/pool/test_poolDestroy.c)
+add_unity_test(test_mmap_mmapAlloc test/mmap/test_mmapAlloc.c)
+add_unity_test(test_mmap_mmapFree test/mmap/test_mmapFree.c)
+add_unity_test(test_mmap_mmapRealloc test/mmap/test_mmapRealloc.c)

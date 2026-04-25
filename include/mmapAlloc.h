@@ -4,8 +4,8 @@
 #include <stddef.h>
 #include "alloc_error.h"
 
-AllocError mmapMalloc(size_t size);
-void mmapFree(void *ptr);
-AllocError mmapRealloc(void *ptr, size_t size);
+AllocError mmapAlloc(size_t size, void **out);
+AllocError mmapFree(void *ptr);
+AllocError mmapRealloc(void *ptr, size_t size, void **out);
 
 #endif
