@@ -40,9 +40,9 @@ endfunction()
 
 add_custom_target(tests DEPENDS
 	test_example
-	test_alloc_myAlloc
-	test_alloc_myFree
-	test_alloc_myRealloc
+	test_sbrk_sbrkAlloc
+	test_sbrk_sbrkFree
+	test_sbrk_sbrkRealloc
 	test_arena_arenaCreate
 	test_arena_arenaAlloc
 	test_arena_arenaReset
@@ -54,9 +54,9 @@ add_custom_target(tests DEPENDS
 )
 
 add_unity_test(test_example test/test_example.c)
-add_unity_test(test_alloc_myAlloc test/alloc/test_myAlloc.c)
-add_unity_test(test_alloc_myFree test/alloc/test_myFree.c)
-add_unity_test(test_alloc_myRealloc test/alloc/test_myRealloc.c)
+add_unity_test(test_sbrk_sbrkAlloc test/alloc/test_sbrkAlloc.c)
+add_unity_test(test_sbrk_sbrkFree test/alloc/test_sbrkFree.c)
+add_unity_test(test_sbrk_sbrkRealloc test/alloc/test_sbrkRealloc.c)
 add_unity_test(test_arena_arenaCreate test/arena/test_arenaCreate.c)
 add_unity_test(test_arena_arenaAlloc test/arena/test_arenaAlloc.c)
 add_unity_test(test_arena_arenaReset test/arena/test_arenaReset.c)

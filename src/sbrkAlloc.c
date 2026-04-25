@@ -1,4 +1,4 @@
-#include "alloc.h"
+#include "sbrkAlloc.h"
 #include <stddef.h>
 #include <unistd.h>
 #include <string.h>
@@ -84,11 +84,11 @@ static void coalesce(block_t *block) {
 	}
 }
 
-size_t myHeapSize(void) {
+size_t heapSize(void) {
 	return (char *)sbrk(0) - (char *)heap_start;
 }
 
-void *myMalloc(size_t size) {
+void *sbrkMalloc(size_t size) {
 	block_t *block;
 	size_t block_size;
 
@@ -118,7 +118,7 @@ void *myMalloc(size_t size) {
 	return (char *)block + sizeof(block_t);
 }
 
-void myFree(void *ptr) {
+void sbrkFree(void *ptr) {
 	block_t *block;
 
 	if (ptr == NULL) return;
@@ -135,16 +135,16 @@ void myFree(void *ptr) {
 	coalesce(block);
 }
 
-void *myRealloc(void *ptr, size_t size) {
+void *sbrkRealloc(void *ptr, size_t size) {
 	block_t *block;
 	block_t *new_block;
 
 	if(ptr == NULL) {
-		return myMalloc(size);
+		return sbrkMalloc(size);
 	}
 
 	if(size == 0) {
-		myFree(ptr);
+		sbrkFree(ptr);
 		return NULL;
 	}
 	block = (block_t *)((char *)ptr - sizeof(block_t));
@@ -153,11 +153,11 @@ void *myRealloc(void *ptr, size_t size) {
 		return ptr;
 	}
 
-	new_block = myMalloc(size);
+	new_block = sbrkMalloc(size);
 	if (new_block == NULL) return NULL;
 	
 	/*									| boundary tag size | */
 	memcpy(new_block, ptr, block->size - sizeof(size_t));
-	myFree(ptr);
+	sbrkFree(ptr);
 	return new_block;
 }
