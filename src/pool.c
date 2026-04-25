@@ -61,6 +61,7 @@ AllocError poolAlloc(pool_t *pool, void **out) {
 	if(pool->free_list == NULL) return ALLOC_ERROR_OOM;
 
 	head = (chunk_t *)pool->free_list;
+	if(head == NULL) return ALLOC_ERROR_OOM;
 	pool->free_list = head->next;
 	*out = head;
 	return ALLOC_OK;
