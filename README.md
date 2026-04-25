@@ -26,8 +26,8 @@ Each allocation is preceded by a header embedded directly in the heap:
 block pointer      pointer returned to caller
 ```
 
-`my_malloc` returns `header + 1` — the address immediately after the header.
-`my_free` recovers the header via `(block_t *)ptr - 1`.
+`sbrkAlloc` returns `header + 1` — the address immediately after the header.
+`sbrkFree` recovers the header via `(block_t *)ptr - 1`.
 
 Boundary tags (a copy of `size` stored at the end of each block) allow `my_free`
 to find the preceding block in memory without a separate backward pointer,
@@ -41,7 +41,7 @@ freed blocks are inserted at the head.
 
 ### Allocation: First-Fit
 
-`my_malloc` walks the free list from the head and returns the first block whose
+`sbrkAlloc` walks the free list from the head and returns the first block whose
 size is sufficient. If no block fits, the heap is extended via `sbrk`.
 
 After selecting a block, it is **split** if the remainder is large enough to
@@ -50,7 +50,7 @@ with unusably small fragments.
 
 ### Freeing: Immediate Coalescing
 
-`my_free` merges adjacent free blocks immediately on every call:
+`sbrkFree` merges adjacent free blocks immediately on every call:
 
 1. Check the block after this one in memory (using `size` to find it) — if
    free, merge.
@@ -61,16 +61,15 @@ This keeps fragmentation low at the cost of slightly more work per `my_free`.
 
 ### Alignment
 
-All sizes are rounded up to a multiple of `ALIGNMENT` (16 bytes) before
-allocation. `sizeof(block_t)` is also a multiple of `ALIGNMENT` so that the
-user pointer is always suitably aligned for any type.
+All sizes are rounded up to a multiple of 8 bytes via `ALIGN(size)` before
+allocation, ensuring the user pointer is suitably aligned for any type.
 
 ### API
 
 ```c
-void *my_malloc(size_t size);
-void  my_free(void *ptr);
-void *my_realloc(void *ptr, size_t size);
+AllocError sbrkAlloc(size_t size, void **out);
+void       sbrkFree(void *ptr);
+AllocError sbrkRealloc(void *ptr, size_t size, void **out);
 ```
 
 ---
@@ -99,12 +98,11 @@ The arena header can live on the stack or be `mmap`'d alongside its buffer.
 
 ### Operations
 
-- **`arena_alloc(arena, size)`** — bump `offset` forward by the aligned size;
+- **`arenaAlloc(arena, size, out)`** — bump `offset` forward by the aligned size;
   return `buf + old_offset`. Fails if capacity is exceeded.
-- **`arena_reset(arena)`** — set `offset = 0`; all memory is logically freed
+- **`arenaReset(arena)`** — set `offset = 0`; all memory is logically freed
   and available for reuse. No system call needed.
-- **`arena_destroy(arena)`** — release the backing buffer (`munmap` or `free`
-  depending on how it was created).
+- **`arenaDestroy(arena)`** — release the backing buffer via `munmap`.
 
 No splitting, no coalescing, no free list — just pointer arithmetic.
 
@@ -123,10 +121,10 @@ argv, redirections — then reset the arena after `waitpid` returns.
 ### API
 
 ```c
-arena_t *arena_create(size_t capacity);
-void    *arena_alloc(arena_t *arena, size_t size);
-void     arena_reset(arena_t *arena);
-void     arena_destroy(arena_t *arena);
+AllocError arenaCreate(size_t capacity, arena_t **out);
+AllocError arenaAlloc(arena_t *arena, size_t size, void **out);
+void       arenaReset(arena_t *arena);
+void       arenaDestroy(arena_t *arena);
 ```
 
 ---
@@ -156,14 +154,14 @@ metadata needed. `pool_alloc` pops the head; `pool_free` pushes back.
 
 ### Operations
 
-- **`pool_create(block_size, count)`** — `mmap` a buffer of `block_size * count`
-  bytes, thread all slots into the free list.
-- **`pool_alloc(pool)`** — pop the head of the free list; return that slot.
+- **`poolCreate(count, chunk_size, out)`** — `mmap` a buffer of `count` chunks,
+  thread all slots into the free list. `chunk_size` is rounded up to 8-byte alignment.
+- **`poolAlloc(pool, out)`** — pop the head of the free list; return that slot.
   O(1), no search.
-- **`pool_free(pool, ptr)`** — push the slot back onto the free list. O(1).
-- **`pool_destroy(pool)`** — release the backing buffer.
+- **`poolFree(pool, ptr)`** — push the slot back onto the free list. O(1).
+- **`poolDestroy(pool)`** — release the backing buffer via `munmap`.
 
-`block_size` must be at least `sizeof(void *)` so each free slot can hold
+`chunk_size` must be at least `sizeof(void *)` so each free slot can hold
 the next pointer.
 
 ### When to use a pool
@@ -181,10 +179,58 @@ tokens, one for AST nodes, one for job structs.
 ### API
 
 ```c
-pool_t *pool_create(size_t block_size, size_t count);
-void   *pool_alloc(pool_t *pool);
-void    pool_free(pool_t *pool, void *ptr);
-void    pool_destroy(pool_t *pool);
+AllocError poolCreate(size_t count, size_t chunk_size, pool_t **out);
+AllocError poolAlloc(pool_t *pool, void **out);
+void       poolFree(pool_t *pool, void *ptr);
+void       poolDestroy(pool_t *pool);
+```
+
+---
+
+## mmap Allocator
+
+A simple allocator where each allocation is an independent `mmap` region.
+No free list, no coalescing — allocate maps, free unmaps. Useful when
+you want heap-like allocation without touching the `sbrk` heap.
+
+### Memory Layout
+
+```
++------------------+----------------------------+
+|  block_t header  |     user payload           |
+|  (size)          |     (size bytes)            |
++------------------+----------------------------+
+^                  ^
+mmap base          pointer returned to caller
+```
+
+Each allocation is a separate `mmap` region. `mmapFree` recovers the header
+via pointer arithmetic and calls `munmap` on the full region.
+
+### Operations
+
+- **`mmapAlloc(size, out)`** — `mmap` a new region of `sizeof(block_t) + ALIGN(size)`,
+  store the total size in the header, return a pointer to the payload.
+- **`mmapFree(ptr)`** — recover the header, `munmap` the full region.
+- **`mmapRealloc(ptr, size, out)`** — if the current block is large enough,
+  return the same pointer. Otherwise `mmapAlloc` a new region, `memcpy` the
+  old payload, `mmapFree` the old region.
+
+### When to use mmap allocation
+
+| Situation | Good fit? |
+|-----------|-----------|
+| Large, infrequent allocations | Yes |
+| Avoiding `sbrk` heap growth | Yes |
+| Many small, short-lived allocations | No (mmap/munmap overhead) |
+| Coalescing adjacent frees | No (each region is independent) |
+
+### API
+
+```c
+AllocError mmapAlloc(size_t size, void **out);
+AllocError mmapFree(void *ptr);
+AllocError mmapRealloc(void *ptr, size_t size, void **out);
 ```
 
 ---
@@ -225,18 +271,23 @@ Run all tests:
 .
 ├── src/
 │   ├── main.c          # Driver / manual tests
-│   ├── alloc.c         # Free-list allocator implementation
-│   ├── arena.c         # Arena allocator implementation
-│   └── pool.c          # Pool allocator implementation
+│   ├── alloc.c         # sbrk free-list allocator
+│   ├── arena.c         # Arena allocator
+│   ├── pool.c          # Pool allocator
+│   └── mmapAlloc.c     # mmap allocator
 ├── include/
-│   ├── alloc.h         # Free-list API and block_t definition
-│   ├── arena.h         # Arena API and arena_t definition
-│   └── pool.h          # Pool API and pool_t definition
+│   ├── alloc_error.h   # Shared AllocError enum
+│   ├── alloc_common.h  # Shared ALIGN(size) macro
+│   ├── alloc.h         # sbrk free-list API
+│   ├── arena.h         # Arena API and arena_t
+│   ├── pool.h          # Pool API and pool_t
+│   └── mmapAlloc.h     # mmap allocator API
 ├── test/
 │   ├── unity/          # Unity test framework
-│   ├── test_alloc.c    # Free-list unit tests
-│   ├── test_arena.c    # Arena unit tests
-│   └── test_pool.c     # Pool unit tests
+│   ├── alloc/          # sbrk allocator tests
+│   ├── arena/          # Arena tests
+│   ├── pool/           # Pool tests
+│   └── mmap/           # mmap allocator tests
 ├── bin/                # Compiled binaries (git-ignored)
 │   └── test/
 └── cmake/              # CMake build directory (git-ignored)
