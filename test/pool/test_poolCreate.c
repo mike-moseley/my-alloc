@@ -6,8 +6,7 @@
 void setUp(void) {}
 void tearDown(void) {}
 
-void test_ok(void)
-{
+void test_null_ptr(void) {
 	pool_t *pool;
 	AllocError err;
 	err = poolCreate(8, 4, &pool);
@@ -55,7 +54,7 @@ void test_size(void) {
 int main(void)
 {
 	UNITY_BEGIN();
-	RUN_TEST(test_ok);
+	RUN_TEST(test_null_ptr);
 	RUN_TEST(test_null_out);
 	RUN_TEST(test_size_zero);
 	RUN_TEST(test_count_zero);
