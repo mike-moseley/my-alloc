@@ -1,8 +1,7 @@
-#ifndef ALLOC_H
-#define ALLOC_H
+#ifndef SBRKALLOC_H
+#define SBRKALLOC_H
 
 #include <stddef.h>
-#include "alloc_error.h"
 
 void *sbrkMalloc(size_t size);
 void sbrkFree(void *ptr);
