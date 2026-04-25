@@ -17,6 +17,7 @@ void test_ok(void)
 
 	err = poolAlloc(pool, &ptr);
 	TEST_ASSERT_EQUAL(ALLOC_OK, err);
+	TEST_ASSERT_NOT_NULL(ptr);
 
 	poolDestroy(pool);
 }

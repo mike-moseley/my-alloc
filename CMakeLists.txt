@@ -49,6 +49,8 @@ add_custom_target(tests DEPENDS
 	test_arena_arenaDestroy
 	test_pool_poolCreate
 	test_pool_poolAlloc
+	test_pool_poolFree
+	test_pool_poolDestroy
 )
 
 add_unity_test(test_example test/test_example.c)
@@ -61,3 +63,5 @@ add_unity_test(test_arena_arenaReset test/arena/test_arenaReset.c)
 add_unity_test(test_arena_arenaDestroy test/arena/test_arenaDestroy.c)
 add_unity_test(test_pool_poolCreate test/pool/test_poolCreate.c)
 add_unity_test(test_pool_poolAlloc test/pool/test_poolAlloc.c)
+add_unity_test(test_pool_poolFree test/pool/test_poolFree.c)
+add_unity_test(test_pool_poolDestroy test/pool/test_poolDestroy.c)
