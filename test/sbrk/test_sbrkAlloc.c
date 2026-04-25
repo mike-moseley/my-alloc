@@ -4,7 +4,7 @@
 void setUp(void) {}
 void tearDown(void) {}
 
-void test_ok(void) {
+void test_null_ptr(void) {
 	void *ptr;
 	ptr = sbrkMalloc(16);
 	TEST_ASSERT_NOT_NULL(ptr);
@@ -64,7 +64,7 @@ void test_allocations_dont_corrupt_adjacent(void) {
 int main(void)
 {
 	UNITY_BEGIN();
-	RUN_TEST(test_ok);
+	RUN_TEST(test_null_ptr);
 	RUN_TEST(test_returns_null_0_size);
 	RUN_TEST(test_alignment);
 	RUN_TEST(test_allocations_unique);
